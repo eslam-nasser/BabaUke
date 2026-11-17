@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/*
+  BabaUke is a songbook printed in flat inks.
+
+  Two papers, chosen by when the song is played:
+    day   – bright paper for playing in daylight
+    night – deep blue paper that will not light up a dark nursery
+
+  The ink is sea green, a nod to the ukulele's island home.
+  The only bright colours are the seven chord colours. Everything else is paper and ink.
+*/
+
+/* Styles that only apply on night paper. */
+@custom-variant night (&:where([data-scene="night"], [data-scene="night"] *));
+
+/* Phones held sideways and other very short screens. */
+@custom-variant short (@media (max-height: 560px));
+
+@theme inline {
+  --font-sans: var(--font-zain), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-rakkas), var(--font-zain), ui-serif, serif;
+
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-soft: var(--soft);
+  --color-wash: var(--wash);
+  --color-rule: var(--rule);
+  --color-sun: #ffc21a;
+  /* Text that sits on a chord colour is always this ink, on both papers. */
+  --color-blot: #062a31;
+
+  --animate-count: count 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes count {
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+}
+
+:root,
+[data-scene="day"] {
+  --paper: #f3f8f7;
+  --ink: #0d4a56;
+  --soft: #3d6d75;
+  --wash: #dcecea;
+  --rule: rgb(13 74 86 / 0.24);
+  --mark: 100%;
+  color-scheme: light;
+}
+
+[data-scene="night"] {
+  --paper: #0c3a44;
+  --ink: #f4f1e6;
+  --soft: #a9c8c6;
+  --wash: #15505c;
+  --rule: rgb(244 241 230 / 0.24);
+  --mark: 100%;
+  color-scheme: dark;
+}
+
+html {
+  background: #f3f8f7;
+  scrollbar-color: #3d6d75 transparent;
+}
+/* Only when the page itself is a night page, not when it merely contains a night section. */
+html:has(body > [data-scene="night"]) {
+  background: #0c3a44;
+  scrollbar-color: #a9c8c6 transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: #ffc21a;
+  color: #0b2e35;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+a {
+  text-underline-offset: 0.2em;
+}
+
+/* ── Karaoke highlighter ────────────────────────────────────────
+   Each sung word gets a highlighter-pen stroke in the colour of the
+   chord being played (two colours if the chord changes mid-word).
+   --p (0→1) is how far the pen has travelled. The stroke sits behind
+   the text, so whole Arabic words keep their joined letters. */
+.tok {
+  --p: 0;
+  position: relative;
+  isolation: isolate;
+  padding-block: 0.08em;
+}
+.tok::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 2px;
+  background: var(--pen);
+  clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0);
+}
+[dir="rtl"] .tok::before {
+  clip-path: inset(0 0 0 calc((1 - var(--p)) * 100%));
+}
+/* At night the pen is a thin underline: the colour stays pure and the screen stays dim. */
+[data-scene="night"] .tok::before {
+  top: auto;
+  height: 0.14em;
+  border-radius: 1px;
+}
+[data-state="past"] .tok { --p: 1; }
+[data-state="future"] .tok { --p: 0; }
+
+/* Speed slider: a thin track inside a 44px tall touch target. */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"].slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+input[type="range"].slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The loading spinner is status, not decoration, so it keeps turning. */
+  *:not(.animate-spin), *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
